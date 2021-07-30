@@ -1,0 +1,81 @@
+@page "/teste"
+@inject HttpClient Http
+@using System.Text.Json
+@using System.Text.Json.Serialization;
+@using blazorApp.Shared.Cep;
+@using blazorApp.ViewModels.Entity;
+
+
+<h1>@msgHeader</h1>
+<input type="button" @onclick="UpdatedMsg"  @onclick:preventDefault="true" class="btn btn-warning" value="Atualizar Cabeçalho" maxlength="9" required>
+<hr>
+<label for="2way">2way Databind</label>
+<input id="2way" type="text" @bind="formUserCEP" disabled readonly>
+
+<div class="myContainer">
+    <form>
+        <div class="form-group">
+            <input type="text" @bind-value="formUserCEP" @bind-value:event="oninput" id="cep" placeholder="Informe seu CEP" required  maxlength="8">
+            <input type="button" @onclick='(()=> GetWebCep(formUserCEP))'  @onclick:preventDefault="true" class="btn btn-warning" value="Buscar" >
+        </div>
+    </form>
+</div>
+<h1>
+    
+</h1>
+
+@if(statusAlert != null ){
+    <h1>@statusAlert</h1>
+}
+
+ @if(showMsg == true){
+     <div>
+        <Cep cep="@cep" userCepComponent="@resultUserCep" showComponent="activateDeactivateMsg"/>
+     </div>
+ }
+ 
+@code{
+
+    public string formUserCEP { get; set; }
+    public string cep {get; set;}
+    public UserCep resultUserCep {get; set;}
+    public string msgHeader {get; set;} = "Consulta do CEP";
+    public bool showMsg { get; set; } = false;
+    private bool statusSuccess = false;
+    private string statusAlert {get; set;} 
+
+    public async Task GetWebCep(string cep)
+        {
+            if(!String.IsNullOrWhiteSpace(formUserCEP))
+            {
+
+            var baseUrl = $"https://viacep.com.br/ws/{cep}/json/";
+
+            resultUserCep  = await Http.GetFromJsonAsync<UserCep>(baseUrl);
+
+            showMsg = true;
+
+            formUserCEP = "";
+            }else{
+                resultUserCep = null;
+                statusAlert = "CEP inválido";
+            }
+        }
+
+     private void showStatusSuccess()
+    {
+         formUserCEP = "";
+        statusSuccess = !statusSuccess;
+    }
+
+    private void activateDeactivateMsg(){
+        showMsg = !showMsg;
+    }
+
+    private async Task UpdatedMsg(){
+        
+        await Task.Delay(2000);
+
+        msgHeader = "Atualizado AGORA!";
+    }
+}
